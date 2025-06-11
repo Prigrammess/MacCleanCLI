@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macos-cleaner"
+version = "1.0.0"
+description = "A beautiful console application for cleaning and optimizing macOS"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "macOS Cleaner Team", email = "info@macos-cleaner.dev"},
+]
+keywords = ["macos", "cleaner", "optimization", "system", "utility"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "rich>=13.7.0",
+    "psutil>=5.9.0",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.1.0",
+    "mypy>=1.5.0",
+    "homebrew-pypi-poet>=0.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/macos-cleaner"
+Documentation = "https://github.com/yourusername/macos-cleaner/wiki"
+Repository = "https://github.com/yourusername/macos-cleaner.git"
+Issues = "https://github.com/yourusername/macos-cleaner/issues"
+
+[project.scripts]
+macos-cleaner = "main:main"
+mclean = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["core*", "models*", "ui*", "utils*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "."
+]
+
+[tool.coverage.run]
+source = ["core", "models", "ui", "utils"]
+omit = ["tests/*", "venv/*", "*/site-packages/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
