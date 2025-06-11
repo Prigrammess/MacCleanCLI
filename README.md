@@ -1,5 +1,8 @@
 # 🍎 macOS Cleaner
 
+<img width="1737" alt="Image" src="https://github.com/user-attachments/assets/fdeb8a4e-3d95-4408-9e4b-484ee47000a7" />
+
+
 A beautiful and efficient console application for cleaning and optimizing macOS systems.
 
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
