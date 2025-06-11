@@ -625,6 +625,8 @@ class SystemScanner:
                 permissions[f"{browser_name} Cache"] = False
 
         return permissions
+
+    def get_system_info(self):
         """Get current system information."""
         import psutil
         import platform
