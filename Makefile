@@ -25,11 +25,11 @@ install-dev:
 
 # Run tests
 test:
-	pytest tests/
+	PYTHONPATH=. pytest tests/
 
 # Run tests with coverage
 test-cov:
-	pytest --cov=. --cov-report=html --cov-report=term tests/
+	PYTHONPATH=. pytest --cov=. --cov-report=html --cov-report=term tests/
 	@echo "Coverage report generated in htmlcov/"
 
 # Run linting

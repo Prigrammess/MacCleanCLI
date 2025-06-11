@@ -168,20 +168,20 @@ class TestSystemScanner:
         def mock_stat(path):
             if str(path) == str(large_file):
                 stat_result = original_stat(path)
-
                 # Mock the size
                 class MockStat:
                     st_size = size
                     st_mtime = stat_result.st_mtime
                     st_atime = stat_result.st_atime
-
                 return MockStat()
             return original_stat(path)
 
         # Temporarily override scan directory
         scanner.home_path = temp_dir.parent
 
-        with pytest.mock.patch('pathlib.Path.stat', side_effect=mock_stat):
+        from unittest.mock import patch
+
+        with patch('pathlib.Path.stat', side_effect=mock_stat):
             result = scanner._scan_large_files()
 
         # Should find at least one large file

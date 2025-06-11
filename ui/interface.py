@@ -29,6 +29,7 @@ from ui.components import (
 from utils.config import Config
 from utils.logger import get_logger
 
+
 console = Console()
 logger = get_logger(__name__)
 
@@ -210,11 +211,11 @@ class CleanerInterface:
     def _perform_scan(self, categories: Optional[List[FileCategory]] = None) -> ScanResult:
         """Perform system scan with progress indication."""
         with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                BarColumn(),
-                TaskProgressColumn(),
-                console=console
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            console=console
         ) as progress:
             task = progress.add_task("[cyan]Scanning system...[/cyan]", total=None)
 
@@ -240,8 +241,8 @@ class CleanerInterface:
                     console.print(create_category_panel(category, result))
 
                     if result.file_count > 5 and Confirm.ask(
-                            f"[cyan]Show all {result.file_count} files?[/cyan]",
-                            default=False
+                        f"[cyan]Show all {result.file_count} files?[/cyan]",
+                        default=False
                     ):
                         self._show_file_list(result.files)
 
@@ -340,11 +341,11 @@ class CleanerInterface:
             console.print("\n[cyan]Cleaning files...[/cyan]")
 
             with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    TaskProgressColumn(),
-                    console=console
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                console=console
             ) as progress:
                 task = progress.add_task("[cyan]Cleaning...[/cyan]", total=100)
 
@@ -438,7 +439,7 @@ class CleanerInterface:
             console.print(f"[{key}] {desc}")
 
         choice = Prompt.ask("\n[cyan]Select option[/cyan]",
-                            choices=["1", "2", "3", "4", "5", "6"])
+                          choices=["1", "2", "3", "4", "5", "6"])
 
         if choice == "1":
             self._purge_memory()
@@ -512,7 +513,7 @@ class CleanerInterface:
             console.print("[b] Back")
 
             choice = Prompt.ask("\n[cyan]Select option[/cyan]",
-                                choices=["d", "e", "r", "b"])
+                              choices=["d", "e", "r", "b"])
 
             if choice == "b":
                 break
@@ -530,6 +531,18 @@ class CleanerInterface:
                         item = items[idx]
 
                         if choice == "d" and item.enabled:
+                            if not item.can_disable:
+                                if Confirm.ask(
+                                    f"[yellow]Warning: {item.name} is not in the safe-to-disable list. "
+                                    f"Force disable anyway?[/yellow]",
+                                    default=False
+                                ):
+                                    # Force disable
+                                    item.can_disable = True
+                                else:
+                                    console.print("[yellow]Skipping protected item[/yellow]")
+                                    continue
+
                             if self.optimizer.disable_startup_item(item):
                                 console.print(f"[green]✅ Disabled: {item.name}[/green]")
                                 items = self.optimizer.get_startup_items()
@@ -557,9 +570,9 @@ class CleanerInterface:
         console.print("[dim]This may take a few minutes[/dim]\n")
 
         with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
         ) as progress:
             task = progress.add_task("[cyan]Optimizing system...[/cyan]")
 
@@ -599,7 +612,15 @@ class CleanerInterface:
 
         console.print(settings_table)
 
-        if Confirm.ask("\n[cyan]Modify settings?[/cyan]", default=False):
+        console.print("\n[cyan]Options:[/cyan]")
+        console.print("[1] Modify settings")
+        console.print("[2] Check permissions")
+        console.print("[3] View troubleshooting guide")
+        console.print("[b] Back to main menu")
+
+        choice = Prompt.ask("\n[cyan]Select option[/cyan]", choices=["1", "2", "3", "b"])
+
+        if choice == "1":
             # Toggle settings
             self.config.dry_run = Confirm.ask(
                 "Enable dry run mode?",
@@ -617,3 +638,41 @@ class CleanerInterface:
             )
 
             console.print("[green]Settings updated![/green]")
+
+        elif choice == "2":
+            self._check_permissions()
+
+        elif choice == "3":
+            console.print("\n[cyan]See TROUBLESHOOTING.md for common issues and solutions[/cyan]")
+            console.print("Common issues:")
+            console.print("  • Browser cache not found: Check Full Disk Access permissions")
+            console.print("  • Cannot disable services: Some are protected by macOS")
+            console.print("  • Permission denied: Grant Terminal full disk access")
+
+    def _check_permissions(self):
+        """Check and display permissions."""
+        console.print("\n[yellow]Checking permissions...[/yellow]")
+
+        permissions = self.scanner.check_permissions()
+
+        # Create permissions table
+        table = Table(title="[bold]Directory Permissions[/bold]", box=box.ROUNDED)
+        table.add_column("Directory", style="cyan")
+        table.add_column("Access", justify="center")
+
+        for name, has_access in permissions.items():
+            access_icon = "[green]✅[/green]" if has_access else "[red]❌[/red]"
+            table.add_row(name, access_icon)
+
+        console.print(table)
+
+        # Show advice if permissions are missing
+        if not all(permissions.values()):
+            console.print("\n[yellow]⚠️  Some directories are not accessible[/yellow]")
+            console.print("\nTo fix permissions:")
+            console.print("1. Open System Preferences > Security & Privacy > Privacy")
+            console.print("2. Select 'Full Disk Access' from the left sidebar")
+            console.print("3. Add Terminal.app (or your terminal emulator)")
+            console.print("4. Restart the terminal and try again")
+        else:
+            console.print("\n[green]✅ All permissions look good![/green]")

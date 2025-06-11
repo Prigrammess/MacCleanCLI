@@ -3,6 +3,7 @@ System scanner module for identifying files to clean
 """
 
 import os
+import os
 import time
 import hashlib
 import subprocess
@@ -17,6 +18,7 @@ from models.scan_result import (
 )
 from utils.logger import get_logger
 from utils.config import Config
+
 
 logger = get_logger(__name__)
 
@@ -42,8 +44,26 @@ class SystemScanner:
             ],
             FileCategory.BROWSER_CACHE: [
                 self.library_path / "Caches" / "com.apple.Safari",
+                self.library_path / "Caches" / "com.apple.Safari.SafeBrowsing",
+                self.library_path / "Caches" / "com.apple.SafariServices",
                 self.library_path / "Caches" / "Google" / "Chrome",
-                self.library_path / "Caches" / "Firefox",
+                self.library_path / "Caches" / "Google" / "Chrome" / "Default" / "Cache",
+                self.library_path / "Caches" / "Google" / "Chrome Canary",
+                self.library_path / "Caches" / "Firefox" / "Profiles",
+                self.library_path / "Caches" / "com.brave.Browser",
+                self.library_path / "Caches" / "com.brave.Browser.nightly",
+                self.library_path / "Caches" / "com.microsoft.edgemac",
+                self.library_path / "Caches" / "com.operasoftware.Opera",
+                self.library_path / "Caches" / "com.vivaldi.Vivaldi",
+                # Alternative Chrome paths
+                self.home_path / "Library" / "Application Support" / "Google" / "Chrome" / "Default" / "Cache",
+                self.home_path / "Library" / "Application Support" / "Google" / "Chrome" / "Default" / "Code Cache",
+                # Firefox alternative paths
+                self.home_path / "Library" / "Application Support" / "Firefox" / "Profiles",
+                # Brave alternative paths
+                self.home_path / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser" / "Default" / "Cache",
+                # Edge alternative paths
+                self.home_path / "Library" / "Application Support" / "Microsoft Edge" / "Default" / "Cache",
             ],
             FileCategory.TEMPORARY_FILES: [
                 Path("/tmp"),
@@ -73,6 +93,30 @@ class SystemScanner:
             ".tmp", ".temp", ".cache", ".log", ".old",
             ".bak", ".backup", ".crash", ".dump"
         }
+
+    def _get_installed_browsers(self) -> Dict[str, Path]:
+        """Get installed browsers and their app paths."""
+        browsers = {
+            'Safari': Path('/Applications/Safari.app'),
+            'Google Chrome': Path('/Applications/Google Chrome.app'),
+            'Firefox': Path('/Applications/Firefox.app'),
+            'Brave Browser': Path('/Applications/Brave Browser.app'),
+            'Microsoft Edge': Path('/Applications/Microsoft Edge.app'),
+            'Opera': Path('/Applications/Opera.app'),
+            'Vivaldi': Path('/Applications/Vivaldi.app'),
+        }
+
+        # Check user Applications folder too
+        user_apps = Path.home() / 'Applications'
+        if user_apps.exists():
+            for browser, system_path in list(browsers.items()):
+                if not system_path.exists():
+                    user_path = user_apps / system_path.name
+                    if user_path.exists():
+                        browsers[browser] = user_path
+
+        # Return only installed browsers
+        return {name: path for name, path in browsers.items() if path.exists()}
 
     def scan(self, categories: Optional[List[FileCategory]] = None) -> ScanResult:
         """
@@ -143,14 +187,22 @@ class SystemScanner:
         )
 
         paths = self.scan_paths.get(category, [])
+        scanned_paths = []
 
         for scan_path in paths:
             if not scan_path.exists():
+                logger.debug(f"Path does not exist: {scan_path}")
                 continue
 
             try:
                 if scan_path.is_dir():
+                    # Check if we have read permission
+                    if not os.access(scan_path, os.R_OK):
+                        logger.warning(f"No read permission for: {scan_path}")
+                        continue
+
                     self._scan_directory(scan_path, category, result)
+                    scanned_paths.append(scan_path.name)
                 else:
                     # Handle glob patterns
                     for path in scan_path.parent.glob(scan_path.name):
@@ -158,20 +210,58 @@ class SystemScanner:
                             file_info = self._analyze_file(path, category)
                             if file_info:
                                 result.add_file(file_info)
+                                scanned_paths.append(path.name)
             except PermissionError:
                 logger.warning(f"Permission denied: {scan_path}")
             except Exception as e:
                 logger.error(f"Error scanning {scan_path}: {e}")
 
+        # Update description with scanned browsers for browser cache
+        if category == FileCategory.BROWSER_CACHE and scanned_paths:
+            browsers = set()
+            for path in scanned_paths:
+                if 'safari' in path.lower():
+                    browsers.add('Safari')
+                elif 'chrome' in path.lower():
+                    browsers.add('Chrome')
+                elif 'firefox' in path.lower():
+                    browsers.add('Firefox')
+                elif 'brave' in path.lower():
+                    browsers.add('Brave')
+                elif 'edge' in path.lower():
+                    browsers.add('Edge')
+                elif 'opera' in path.lower():
+                    browsers.add('Opera')
+                elif 'vivaldi' in path.lower():
+                    browsers.add('Vivaldi')
+
+            if browsers:
+                result.description = f"Browser cache files from: {', '.join(sorted(browsers))}"
+            else:
+                result.description = "No browser caches found (check permissions)"
+
         return result
 
     def _scan_directory(self, directory: Path, category: FileCategory,
-                        result: CategoryResult, max_depth: int = 3):
+                       result: CategoryResult, max_depth: int = 3):
         """Recursively scan a directory."""
         if max_depth <= 0:
             return
 
         try:
+            # Special handling for Firefox profiles
+            if 'Firefox' in str(directory) and directory.name == 'Profiles':
+                # Scan each profile directory
+                for profile_dir in directory.iterdir():
+                    if profile_dir.is_dir() and not profile_dir.name.startswith('.'):
+                        # Look for cache directories in Firefox profiles
+                        cache_dirs = ['cache2', 'startupCache', 'shader-cache']
+                        for cache_name in cache_dirs:
+                            cache_path = profile_dir / cache_name
+                            if cache_path.exists() and cache_path.is_dir():
+                                self._scan_directory(cache_path, category, result, max_depth - 1)
+                return
+
             for item in directory.iterdir():
                 try:
                     if item.is_dir() and not item.is_symlink():
@@ -223,7 +313,7 @@ class SystemScanner:
         """Check if a file is cleanable based on category and rules."""
         # Category-specific rules
         if category in [FileCategory.SYSTEM_CACHE, FileCategory.USER_CACHE,
-                        FileCategory.BROWSER_CACHE]:
+                       FileCategory.BROWSER_CACHE]:
             return True
 
         if category == FileCategory.TEMPORARY_FILES:
@@ -317,7 +407,7 @@ class SystemScanner:
         return result
 
     def _find_duplicates_in_directory(self, directory: Path,
-                                      file_hashes: Dict[str, List[Path]]):
+                                    file_hashes: Dict[str, List[Path]]):
         """Find duplicate files in a directory."""
         try:
             for item in directory.rglob("*"):
@@ -377,7 +467,7 @@ class SystemScanner:
                                 category=FileCategory.LARGE_FILES,
                                 priority=CleaningPriority.OPTIONAL,
                                 is_safe_to_delete=True,
-                                description=f"Large file ({stat.st_size / (1024 ** 3):.1f} GB)"
+                                description=f"Large file ({stat.st_size / (1024**3):.1f} GB)"
                             )
                             result.add_file(file_info)
             except (PermissionError, OSError):
@@ -498,7 +588,43 @@ class SystemScanner:
         """Get description for a specific file."""
         return f"File: {file_path.name}"
 
-    def get_system_info(self) -> SystemInfo:
+    def check_permissions(self) -> Dict[str, bool]:
+        """Check permissions for common directories."""
+        permissions = {}
+
+        important_paths = [
+            ("User Library", self.library_path),
+            ("User Caches", self.library_path / "Caches"),
+            ("System Caches", Path("/Library/Caches")),
+            ("Temporary Files", Path("/tmp")),
+            ("User Downloads", self.home_path / "Downloads"),
+            ("Application Support", self.library_path / "Application Support"),
+        ]
+
+        for name, path in important_paths:
+            if path.exists():
+                permissions[name] = os.access(path, os.R_OK)
+            else:
+                permissions[name] = False
+
+        # Check specific browser caches
+        browsers = self._get_installed_browsers()
+        for browser_name in browsers:
+            if 'Safari' in browser_name:
+                cache_path = self.library_path / "Caches" / "com.apple.Safari"
+            elif 'Chrome' in browser_name:
+                cache_path = self.library_path / "Caches" / "Google" / "Chrome"
+            elif 'Firefox' in browser_name:
+                cache_path = self.home_path / "Library" / "Application Support" / "Firefox"
+            else:
+                continue
+
+            if cache_path.exists():
+                permissions[f"{browser_name} Cache"] = os.access(cache_path, os.R_OK)
+            else:
+                permissions[f"{browser_name} Cache"] = False
+
+        return permissions
         """Get current system information."""
         import psutil
         import platform

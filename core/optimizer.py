@@ -8,10 +8,11 @@ import plistlib
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
-from datetime import datetime
+import time
 
 from utils.logger import get_logger
 from utils.config import Config
+
 
 logger = get_logger(__name__)
 
@@ -76,6 +77,11 @@ class SystemOptimizer:
             'com.google.keystone.daemon',
             'com.skype.skype.helper',
             'com.oracle.java.Java-Updater',
+            'ru.vpnmonster.service',
+            'com.nordvpn.service',
+            'com.expressvpn.service',
+            'com.surfshark.service',
+            'com.privateinternetaccess.service',
         }
 
         # Services that should never be disabled
@@ -426,7 +432,7 @@ class SystemOptimizer:
             mem_after = psutil.virtual_memory()
 
             freed = mem_after.available - mem_before.available
-            logger.info(f"Purged memory, freed approximately {freed / (1024 ** 2):.0f} MB")
+            logger.info(f"Purged memory, freed approximately {freed / (1024**2):.0f} MB")
 
             return max(0, freed)
 

@@ -296,7 +296,7 @@ class SystemCleaner:
             if not self.dry_run:
                 # Use system command for proper trash emptying
                 import subprocess
-                subprocess.run(['rm', '-rf', f'{trash_path}/*'], shell=True, check=False)
+                subprocess.run(['rm', '-rf', str(trash_path / "*")], shell=False, check=False)
 
             # Record results
             for item in trash_files:

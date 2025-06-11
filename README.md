@@ -66,7 +66,7 @@ mclean
 
 ```bash
 # Scan only, don't clean
-mac-clean--scan-only
+mac-clean --scan-only
 
 # Automatic mode (clean recommended items)
 mac-clean --auto

@@ -118,11 +118,22 @@ def create_scan_results_table(scan_result: ScanResult) -> Panel:
 
     total_files = 0
     total_size = 0
+    has_results = False
 
     for category, result in sorted_categories:
         if result.file_count == 0:
+            # Show categories that were scanned but found nothing
+            if category == FileCategory.BROWSER_CACHE:
+                table.add_row(
+                    get_category_display_name(category),
+                    "0",
+                    "0.0 B",
+                    "[dim]No accessible caches[/dim]"
+                )
+                has_results = True
             continue
 
+        has_results = True
         total_files += result.file_count
         total_size += result.total_size
 
@@ -141,8 +152,9 @@ def create_scan_results_table(scan_result: ScanResult) -> Panel:
             f"[{priority_color}]{result.priority.value}[/{priority_color}]"
         )
 
-    # Add separator
-    table.add_section()
+    # Add separator if we have results
+    if has_results:
+        table.add_section()
 
     # Add total row
     table.add_row(
@@ -240,7 +252,7 @@ def create_cleaning_summary(result: CleaningResult, is_preview: bool = False) ->
     # Add errors if any
     if result.files_failed and not is_preview:
         error_text = Text(f"\n⚠️  {len(result.files_failed)} files could not be deleted",
-                          style="yellow")
+                         style="yellow")
     else:
         error_text = Text()
 
@@ -322,7 +334,7 @@ def format_time(dt: datetime) -> str:
 
 
 def create_progress_panel(title: str, current: int, total: int,
-                          message: str = "") -> Panel:
+                         message: str = "") -> Panel:
     """Create a progress panel."""
     percentage = (current / total * 100) if total > 0 else 0
 
